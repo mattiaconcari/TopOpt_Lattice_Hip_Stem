@@ -48,5 +48,5 @@ The primary contribution of this thesis was adapting and extending a baseline ac
 ## 📚 Acknowledgments & References
 * **Baseline TopOpt Framework:** The fundamental structure for coupling Python with Abaqus for stress-constrained topology optimization was adapted from the open-source repository [Python-Code-for-Stress-Constrained-Topology-Optimization-in-ABAQUS](https://github.com/pnfernandes/Python-Code-for-Stress-Constrained-Topology-Optimization-in-ABAQUS) by P. N. Fernandes.
 * **MMA Algorithm:** The core mathematical optimization relies on the Method of Moving Asymptotes, originally developed by Krister Svanberg (1987).
-* **Novel Contributions:** The baseline framework was heavily extended in this thesis to support multi-scale integration (TPMS lattices), variable density-dependent fatigue constraints, and complex anatomical models.
+* **Novel Contributions:** The baseline framework was heavily extended in this thesis to support multi-scale integration (TPMS lattices), and variable density-dependent fatigue constraints.
 
