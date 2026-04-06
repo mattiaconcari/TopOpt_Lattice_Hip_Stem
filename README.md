@@ -14,17 +14,16 @@ This thesis project details the development of a comprehensive computational pip
 ## ⚙️ System Architecture: The Multi-Scale Pipeline
 The workflow is divided into three major computational phases, seamlessly handling both macro-scale anatomy and micro-scale lattice structures.
 
-*(Insert your High-Level Flowchart here)*
-![Multi-Scale Pipeline Architecture](link_to_your_first_diagram_here.png)
+![Multi-Scale Pipeline Architecture](Pipeline_Architecture.png)
 > **Figure 1:** High-level overview of the multi-scale methodology, from medical imaging to the final optimized topology.
 
 ### Phase 1: Anatomical Segmentation (Macro-Scale)
-* **Software:** Medical Imaging Tools (e.g., Mimics / 3D Slicer)
+* **Software:** Medical Imaging Tools (Materialise Mimics, Materialise 3-Matic)
 * Extraction of the 3D anatomical domain (human femur) from Medical CT scans. Surface smoothing, boolean operations, and generation of the finite element mesh suitable for macro-scale load cases.
 
 ### Phase 2: TPMS Generation & Homogenization (Micro-Scale)
 * **Software:** Python & Abaqus
-* Algorithmic generation of Triply Periodic Minimal Surfaces (TPMS) lattice unit cells. Implementation of **Computational Homogenization** via Abaqus Python scripting to extract the effective, equivalent mechanical properties (stiffness matrix) of the complex micro-architectures.
+* Generation of Triply Periodic Minimal Surfaces (TPMS) lattice unit cells. **Computational Homogenization** via nTop to extract the effective, equivalent stiffness matrix and via Matlab to obtain the fatigue limits of the complex micro-architectures.
 
 ### Phase 3: Fatigue-Driven Topology Optimization (Macro-Scale)
 * **Software:** Python (Optimization Engine) & Abaqus (FEM Solver)
@@ -33,53 +32,21 @@ The workflow is divided into three major computational phases, seamlessly handli
 
 ---
 
-## 🔄 The Optimization Engine (Under the Hood)
-The core of Phase 3 is a custom-built optimization engine. It relies on a robust automated loop where a Python master script dictates the mathematical optimization and dynamically controls Abaqus as a background FEM solver.
+## 🧠 Technical Challenges & Integration Details
+The primary contribution of this thesis was adapting and extending a baseline academic TopOpt framework to handle complex, real-world multi-scale problems. Key integrations and engineering solutions include:
 
-*(Insert your Low-Level Flowchart here)*
-![Optimization Engine Loop](link_to_your_second_diagram_here.png)
-> **Figure 2:** The iterative coupling between the Python MMA environment and the Abaqus solver, highlighting the automated data exchange and sensitivity analysis.
+* **Density-Dependent Fatigue Limit via Static Analysis**
+  * *Challenge:* Running full cyclic fatigue simulations inside an iterative loop is computationally prohibitive. Furthermore, for TPMS lattices, the fatigue limit is not a constant material property but heavily depends on the local relative density (ρ).
+  * *Solution:* Evaluated fatigue resistance using static finite element analysis by mapping a dynamic, density-dependent fatigue limit as the strict target constraint. As the optimizer updates the local element density, the allowable stress threshold dynamically adjusts (σ_allowable = f(ρ)). This ensures the structure respects the specific high-cycle fatigue limits of the porous TPMS architecture without the massive computational overhead of transient analysis.
 
-## 🧠 Technical Challenges & Advanced Solutions
-Coupling micro-mechanics with stress-driven topology optimization is inherently unstable and ill-conditioned. Key milestones achieved include:
+* **Multi-Scale Material Integration (TPMS)**
+  * *Challenge:* The baseline framework was designed for standard, fully solid isotropic materials.
+  * *Solution:* Modified the framework to accept and utilize the homogenized equivalent stiffness matrices derived from the micro-scale TPMS lattice structures, allowing the macro-scale optimization to "see" the mechanical behavior of the 3D-printed infill.
 
-* **Scale Bridging:** Seamlessly passing homogenized material tensors from the micro-scale TPMS analysis to the macro-scale optimization loop.
-* **P-Norm Aggregation:** Aggregating thousands of local stress constraints into a single global measure to make the computational cost manageable while capturing peak stresses critical for fatigue.
-* 
-### 💻 Algorithm Snapshot (Pseudocode)
-<details>
-<summary>▶ <b>Click to expand the core optimization logic</b></summary>
+--
 
-```text
-INITIALIZE:
-    density vector ρ = ρ_initial
-    input parameters (move_limit, TPMS constants, P-Norm factor)
-    iter = 0, change = 1.0
+## 📚 Acknowledgments & References
+* **Baseline TopOpt Framework:** The fundamental structure for coupling Python with Abaqus for stress-constrained topology optimization was adapted from the open-source repository [Python-Code-for-Stress-Constrained-Topology-Optimization-in-ABAQUS](https://github.com/pnfernandes/Python-Code-for-Stress-Constrained-Topology-Optimization-in-ABAQUS) by P. N. Fernandes.
+* **MMA Algorithm:** The core mathematical optimization relies on the Method of Moving Asymptotes, originally developed by Krister Svanberg (1987).
+* **Novel Contributions:** The baseline framework was heavily extended in this thesis to support multi-scale integration (TPMS lattices), variable density-dependent fatigue constraints, and complex anatomical models.
 
-WHILE change > tolerance AND iter < max_iter:
-    // 1. FEM Evaluation (Abaqus Call)
-    Solve K(ρ) * U = F
-    Extract element displacements U_e and stresses σ_e
-    
-    // 2. Global Responses Computation
-    Compliance C = U^T * K * U
-    P-Norm Stress σ_PN = ( Σ(σ_e ^ P) ) ^ (1/P)
-    Volume Fraction V = Σ ρ_i / V_total
-    
-    // 3. Sensitivity Analysis (Adjoint/Direct Methods)
-    Compute objective gradient: dC_dρ
-    Compute constraint gradients: dV_dρ, dσ_PN_dρ
-    Apply Mesh-Independence Filter to sensitivities
-    
-    // 4. Dynamic Scaling (Ill-Conditioning Fix)
-    dσ_PN_dρ = dσ_PN_dρ * stress_scaling_factor
-    
-    // 5. Method of Moving Asymptotes (MMA)
-    ρ_new = MMA_Update(ρ, C, dC_dρ, V, dV_dρ, σ_PN, dσ_PN_dρ, move_limit)
-    
-    // 6. Convergence Check
-    change = max(abs(ρ_new - ρ))
-    ρ = ρ_new
-    iter += 1
-
-RETURN Optimized Topology ρ
