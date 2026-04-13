@@ -1,4 +1,5 @@
 # 🚀 Topology Optimization of Functionally Graded Lattice Femoral Stem: Balancing Stress-shielding Reduction and Fatigue Resistance
+*Interdisciplinary Thesis | Politecnico di Milano | Mar. 2025 - Mar. 2026*
 
 ## 📌 Project Overview
 This thesis project details the development of a comprehensive computational pipeline bridging biomechanics, computational micromechanics, and advanced structural optimization. The core objective is to design highly optimized, ISO 7206-4 fatigue-resistant orthopedic hip implants utilizing Additive Manufacturing capabilities, specifically Triply Periodic Minimal Surfaces (TPMS).
